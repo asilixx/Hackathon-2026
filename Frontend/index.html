@@ -83,7 +83,35 @@
       <div id="health-container">
         <div id="health-bar"></div>
       </div>
-      <div id="ammo-display">READY</div>
+      <div id="ammo-display"></div>
+    </div>
+    <div
+      id="ui"
+      style="
+        position: absolute;
+        bottom: 100px;
+        left: 30px;
+        font-family: &quot;Courier New&quot;, Courier, monospace;
+        color: white;
+      "
+    >
+      <div
+        style="
+          width: 200px;
+          background: rgba(0, 0, 0, 0.5);
+          border: 2px solid white;
+          margin-bottom: 10px;
+        "
+      >
+        <div
+          id="health-bar"
+          style="width: 100%; height: 15px; background: #ff4444"
+        ></div>
+      </div>
+      <div style="font-size: 24px; text-shadow: 2px 2px #000">
+        AMMO: <span id="ammo-current">12</span> /
+        <span id="ammo-total">48</span>
+      </div>
     </div>
 
     <script type="module" src="src/main.js"></script>

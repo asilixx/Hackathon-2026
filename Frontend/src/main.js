@@ -100,6 +100,7 @@ function animate() {
   lastTime = now;
 
   player.update(dt);
+  scene.add(camera);
 
   for (let i = zombies.length - 1; i >= 0; i--) {
     if (zombies[i].isDead) {
