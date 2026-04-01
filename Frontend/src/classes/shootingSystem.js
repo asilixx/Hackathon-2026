@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { remove } from 'three/examples/jsm/libs/tween.module.js';
 
 export class ShootingSystem {
   constructor(camera, controls, collidables, zombies) {
@@ -19,7 +18,8 @@ export class ShootingSystem {
 
   const wallHits = this.raycaster.intersectObjects(this.collidables, true);
 
-  this.zombies.forEach(zombie => {
+    this.zombies.forEach(zombie => {
+    if (zombie.isDead) return;
     if (!zombie.model) return;
 
     const zombieDistance = this.camera.position.distanceTo(zombie.model.position);

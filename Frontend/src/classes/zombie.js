@@ -17,6 +17,7 @@ export class Zombie {
     this.mixer = null;
     this.model = null;
     this.hitbox = new THREE.Box3();
+    this.isDead = false;
 
     this.hitboxHelper = new THREE.Box3Helper(this.hitbox, 0xff0000);
     scene.add(this.hitboxHelper);
@@ -81,6 +82,9 @@ export class Zombie {
     }
   }
   die() {
+    if (this.isDead) return;
+
+    this.isDead = true;
     this.scene.remove(this.container);
     this.scene.remove(this.hitboxHelper);
   }
