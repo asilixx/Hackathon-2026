@@ -4,6 +4,7 @@ export class Map {
   constructor(scene) {
     this.scene = scene;
     this.collidables = [];
+    this.flickerLights = [];
     this._build();
   }
 
@@ -11,43 +12,81 @@ export class Map {
     this._createSky();
     this._createGround();
     this._createWalls();
-    this._createObstacles();
-    this._createLights();
+    this._createHighObstacles(); // Obstacles hauts et asymétriques
+    this._createGlobalLighting(); // Éclairage général puissant
+    this._createRealisticLamps();
   }
 
   _createSky() {
-    this.scene.background = new THREE.Color(0x1a1a2e);
-    this.scene.fog = new THREE.Fog(0x1a1a2e, 20, 80);
+    // Un bleu nuit très profond mais pas noir
+    this.scene.background = new THREE.Color(0x0a0a1a);
+    // Brouillard très léger pour garder la profondeur de vue
+    this.scene.fog = new THREE.FogExp2(0x0a0a1a, 0.005);
+  }
+
+  _createGlobalLighting() {
+    // 1. LUMIÈRE AMBIANTE : C'est elle qui définit la luminosité minimum.
+    // On la passe à 0.8 pour que TOUT soit visible, même dans le noir.
+    const ambient = new THREE.AmbientLight(0xffffff, 0.8); 
+    this.scene.add(ambient);
+
+    // 2. LUMIÈRE DE CIEL (Lune/Projecteurs distants)
+    // Elle ajoute du relief et de la clarté directionnelle
+    const sun = new THREE.DirectionalLight(0xccccff, 1.0);
+    sun.position.set(20, 50, 10);
+    sun.castShadow = true;
+    // On élargit la zone d'ombre pour une grande map
+    sun.shadow.camera.left = -30;
+    sun.shadow.camera.right = 30;
+    sun.shadow.camera.top = 30;
+    sun.shadow.camera.bottom = -30;
+    this.scene.add(sun);
   }
 
   _createGround() {
     const geo = new THREE.PlaneGeometry(60, 60);
-    const mat = new THREE.MeshLambertMaterial({ color: 0x2d2d2d });
+    // Matériau plus clair pour réfléchir la lumière
+    const mat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.8 });
     const ground = new THREE.Mesh(geo, mat);
     ground.rotation.x = -Math.PI / 2;
     ground.receiveShadow = true;
     this.scene.add(ground);
-
-    const grid = new THREE.GridHelper(60, 30, 0x444444, 0x333333);
-    this.scene.add(grid);
   }
 
   _createWalls() {
-    const wallMat = new THREE.MeshLambertMaterial({ color: 0x4a4a4a });
-    const wallHeight = 6;
-    const arenaSize = 28; 
-
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a });
+    const size = 30;
+    // Murs extérieurs très hauts (10m) pour fermer la map
     const walls = [
-      [60, 1, 0,          -arenaSize, 0],
-      [60, 1, 0,           arenaSize, 0],
-      [1, 60, -arenaSize,  0,         0],
-      [1, 60,  arenaSize,  0,         0],
+      [60, 10, 1, 0, 5, -size], [60, 10, 1, 0, 5, size],
+      [1, 10, 60, -size, 5, 0], [1, 10, 60, size, 5, 0]
+    ];
+    walls.forEach(([w, h, d, x, y, z]) => {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), wallMat);
+      mesh.position.set(x, y, z);
+      this.scene.add(mesh);
+      this.collidables.push(mesh);
+    });
+  }
+
+  // ─── OBSTACLES HAUTS ET ASYMÉTRIQUES ──────────────────────
+  _createHighObstacles() {
+    // On crée des blocs de 5 à 7 mètres de haut (impossible de sauter dessus)
+    // Format: [Largeur, Hauteur, Profondeur, X, Z, Couleur]
+    const structures = [
+      [12, 7, 3, -15, -10, 0x222244], // Grand mur technique NO
+      [4, 6, 12, 18, -15, 0x442222],  // Bloc vertical NE
+      [8, 5, 8, -18, 15, 0x224422],   // Zone de stockage SO
+      [2, 6, 2, 8, 12, 0x333333],     // Pilier isolé SE
+      [10, 5, 2, 0, -22, 0x333333],   // Mur de séparation Nord
     ];
 
-    walls.forEach(([w, d, x, z]) => {
-      const geo = new THREE.BoxGeometry(w, wallHeight, d);
-      const mesh = new THREE.Mesh(geo, wallMat);
-      mesh.position.set(x, wallHeight / 2, z);
+    structures.forEach(([w, h, d, x, z, col]) => {
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(w, h, d),
+        new THREE.MeshStandardMaterial({ color: col })
+      );
+      mesh.position.set(x, h / 2, z); // Posé au sol
       mesh.castShadow = true;
       mesh.receiveShadow = true;
       this.scene.add(mesh);
@@ -55,93 +94,43 @@ export class Map {
     });
   }
 
-  _createObstacles() {
-    const cratePositions = [
-      [-8,  -8], [ 8, -8],
-      [-8,   8], [ 8,  8],
-      [ 0,  -5], [ 0,   5],
-      [-14,  0], [14,   0],
-      [-5,   0], [ 5,   0],
-      [-12, 12], [12,  12],
-      [-12,-12], [12, -12],
+  _createRealisticLamps() {
+    // 3 lampadaires puissants placés de façon asymétrique
+    const positions = [
+        {x: -10, z: 10},
+        {x: 12, z: -10},
+        {x: 5, z: 20}
     ];
 
-    const crateMat = new THREE.MeshLambertMaterial({ color: 0x8B6914 });
+    positions.forEach(pos => {
+      const group = new THREE.Group();
+      
+      // Poteau fin
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 8), new THREE.MeshStandardMaterial({color: 0x111111}));
+      pole.position.y = 4;
+      group.add(pole);
 
-    cratePositions.forEach(([x, z]) => {
-      const size = 3  ;
-      const geo = new THREE.BoxGeometry(size, size, size);
-      const crate = new THREE.Mesh(geo, crateMat);
-      crate.position.set(x, size / 2.5, z);
-      crate.castShadow = true;
-      crate.receiveShadow = true;
-      this.scene.add(crate);
-      this.collidables.push(crate);
-    });
+      // Tête de lampe
+      const head = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.3, 0.5), new THREE.MeshStandardMaterial({color: 0x000000}));
+      head.position.set(0.6, 8, 0);
+      group.add(head);
 
-    const barrierMat = new THREE.MeshLambertMaterial({ color: 0x555555 });
-    const barriers = [
-      [-5, -15, 0],
-      [ 5,  15, 0],
-      [-15, -5, Math.PI / 2],
-      [ 15,  5, Math.PI / 2],
-    ];
+      // Spot puissant dirigé vers le bas
+      const spot = new THREE.SpotLight(0xfff5d7, 150, 40, Math.PI/3, 0.5);
+      spot.position.set(1.2, 7.8, 0);
+      spot.target.position.set(1.2, 0, 0);
+      spot.castShadow = true;
+      group.add(spot);
+      group.add(spot.target);
 
-    barriers.forEach(([x, z, rotY]) => {
-      const geo = new THREE.BoxGeometry(6, 4, 0.5);
-      const barrier = new THREE.Mesh(geo, barrierMat);
-      barrier.position.set(x, 1, z);
-      barrier.rotation.y = rotY;
-      barrier.castShadow = true;
-      barrier.receiveShadow = true;
-      this.scene.add(barrier);
-      this.collidables.push(barrier);
-    });
-
-    const pillarMat = new THREE.MeshLambertMaterial({ color: 0x3a3a3a });
-    const pillarPositions = [
-      [-20, -20], [20, -20],
-      [-20,  20], [20,  20],
-    ];
-
-    pillarPositions.forEach(([x, z]) => {
-      const geo = new THREE.BoxGeometry(1.5, 5, 1.5);
-      const pillar = new THREE.Mesh(geo, pillarMat);
-      pillar.position.set(x, 2.5, z);
-      pillar.castShadow = true;
-      this.scene.add(pillar);
-      this.collidables.push(pillar);
+      group.position.set(pos.x, 0, pos.z);
+      this.scene.add(group);
     });
   }
 
-  _createLights() {
-    const ambient = new THREE.AmbientLight(0x222244, 1000);
-    this.scene.add(ambient);
-
-    const lampPositions = [
-      [-22, -22], [22, -22],
-      [-22,  22], [22,  22],
-    ];
-
-    lampPositions.forEach(([x, z]) => {
-      const light = new THREE.PointLight(0xff6600, 2, 25);
-      light.position.set(x, 5, z);
-      light.castShadow = true;
-      this.scene.add(light);
-
-      const geo = new THREE.SphereGeometry(0.2, 8, 8);
-      const mat = new THREE.MeshBasicMaterial({ color: 0xff6600 });
-      const lamp = new THREE.Mesh(geo, mat);
-      lamp.position.copy(light.position);
-      this.scene.add(lamp);
-    });
-
-    const centerLight = new THREE.PointLight(0x4444ff, 1, 30);
-    centerLight.position.set(0, 8, 0);
-    this.scene.add(centerLight);
+  update(dt) {
+    // Optionnel: ajouter du flickering léger ici si besoin
   }
 
-  getCollidables() {
-    return this.collidables;
-  }
+  getCollidables() { return this.collidables; }
 }
