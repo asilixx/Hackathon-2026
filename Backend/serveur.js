@@ -1,8 +1,10 @@
 import express from "express";
 import scoreRoutes from "./Routes/score.route.js";
 import waveRoutes from "./Routes/wave.route.js";
+import cors from "cors";
 
 const app = express();
+app.use(cors());
 
 app.use(express.json());
 

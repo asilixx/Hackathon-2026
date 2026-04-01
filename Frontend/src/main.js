@@ -1,82 +1,114 @@
-import * as THREE from 'three';
-import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js';
-import { Map } from './classes/map.js';
-import { Player } from './classes/player.js';
-import { Zombie } from './classes/zombie.js';
-import Stats from 'https://cdnjs.cloudflare.com/ajax/libs/stats.js/r17/Stats.min.js';
+import * as THREE from "three";
+import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls.js";
+import { Map } from "./classes/map.js";
+import { Player } from "./classes/player.js";
+import { Zombie } from "./classes/zombie.js";
+import Stats from "https://cdnjs.cloudflare.com/ajax/libs/stats.js/r17/Stats.min.js";
 
-
-
-const scene    = new THREE.Scene();
-const camera   = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 200);
+// -------------------- Initialisation scène --------------------
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(
+  75,
+  window.innerWidth / window.innerHeight,
+  0.1,
+  200
+);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
-const zombie = new Zombie(scene);
-
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 document.body.appendChild(renderer.domElement);
 
+// -------------------- Controls, map et collisions --------------------
 const controls = new PointerLockControls(camera, document.body);
 const map = new Map(scene);
 const collidables = map.getCollidables();
 
+const collisionManager = {
+  check(playerBox) {
+    return collidables.some((obj) => {
+      const objBox = new THREE.Box3().setFromObject(obj);
+      return playerBox.intersectsBox(objBox);
+    });
+  },
+};
+
+// -------------------- Player --------------------
+const player = new Player(camera, scene, collisionManager, controls);
+
+// -------------------- Stats --------------------
 const stats = new Stats();
 stats.showPanel(0);
 document.body.appendChild(stats.dom);
 
+// -------------------- Overlay pour pointer lock --------------------
+const overlay = document.getElementById("overlay");
+overlay.addEventListener("click", () => (overlay.style.display = "none"));
 
-
-
-const collisionManager = {
-  check(playerBox) {
-    return collidables.some(obj => {
-      const objBox = new THREE.Box3().setFromObject(obj);
-      return playerBox.intersectsBox(objBox);
-    });
-  }
-};
-
-const player = new Player(camera, scene, collisionManager, controls);
-
-const overlay = document.getElementById('overlay');
-overlay.addEventListener('click', () => overlay.style.display = 'none');
-
-document.addEventListener('pointerlockchange', () => {
-  if (!document.pointerLockElement) overlay.style.display = 'flex';
+document.addEventListener("pointerlockchange", () => {
+  if (!document.pointerLockElement) overlay.style.display = "flex";
 });
 
+// -------------------- Gestion des zombies --------------------
+const zombies = []; // tableau pour stocker toutes les instances
+const wavenum = 1;
+
+try {
+  const response = await fetch(`http://localhost:3000/waves/${wavenum}`);
+  if (!response.ok) throw new Error("Erreur API");
+
+  const wave = await response.json();
+  console.log(wave);
+
+  for (const enemyData of wave.enemies) {
+    for (let i = 0; i < enemyData.count; i++) {
+      const z = new Zombie(scene);
+      zombies.push(z); // stocke la référence
+      console.log(enemyData.name);
+    }
+  }
+} catch (err) {
+  console.error(err);
+}
+
+// -------------------- Raycaster --------------------
 const raycaster = new THREE.Raycaster();
 
-document.addEventListener('click', () => {
+document.addEventListener("click", () => {
   if (!controls.isLocked) return;
 
   raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
 
-  if (raycaster.ray.intersectsBox(zombie.hitbox)) {
-    console.log('Zombie touché !');
-    // zombie.model.remove()
+  for (const z of zombies) { // boucle sur tous les zombies
+    if (raycaster.ray.intersectsBox(z.hitbox)) {
+      console.log("Zombie touché !");
+      // z.model.remove(); // décommenter si tu veux supprimer le modèle
+    }
   }
 });
 
+// -------------------- Boucle d'animation --------------------
 let lastTime = performance.now();
 
 function animate() {
   stats.begin();
 
   const now = performance.now();
-  const dt  = (now - lastTime) / 1000;
-  lastTime  = now;
+  const dt = (now - lastTime) / 1000;
+  lastTime = now;
 
   player.update(dt);
-  zombie.update(dt);  
+
+  for (const z of zombies) { // update tous les zombies
+    z.update(dt);
+  }
 
   renderer.render(scene, camera);
   stats.end();
-  
+
   requestAnimationFrame(animate);
 }
 
 animate();
 
-
-export { scene, camera, collidables };
+// -------------------- Exports --------------------
+export { scene, camera, collidables, zombies };
