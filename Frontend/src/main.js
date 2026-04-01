@@ -3,6 +3,8 @@ import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockCont
 import { Map } from './classes/map.js';
 import { Player } from './classes/player.js';
 import { Zombie } from './classes/zombie.js';
+import Stats from 'https://cdnjs.cloudflare.com/ajax/libs/stats.js/r17/Stats.min.js';
+
 
 
 const scene    = new THREE.Scene();
@@ -17,6 +19,13 @@ document.body.appendChild(renderer.domElement);
 const controls = new PointerLockControls(camera, document.body);
 const map = new Map(scene);
 const collidables = map.getCollidables();
+
+const stats = new Stats();
+stats.showPanel(0);
+document.body.appendChild(stats.dom);
+
+
+
 
 const collisionManager = {
   check(playerBox) {
@@ -45,13 +54,14 @@ document.addEventListener('click', () => {
 
   if (raycaster.ray.intersectsBox(zombie.hitbox)) {
     console.log('Zombie touché !');
+    // zombie.model.remove()
   }
 });
 
 let lastTime = performance.now();
 
 function animate() {
-  requestAnimationFrame(animate);
+  stats.begin();
 
   const now = performance.now();
   const dt  = (now - lastTime) / 1000;
@@ -61,8 +71,9 @@ function animate() {
   zombie.update(dt);  
 
   renderer.render(scene, camera);
-
-  // console.log(camera.position);
+  stats.end();
+  
+  requestAnimationFrame(animate);
 }
 
 animate();
