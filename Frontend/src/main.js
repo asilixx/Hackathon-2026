@@ -61,7 +61,10 @@ try {
 
   for (const enemyData of wave.enemies) {
     for (let i = 0; i < enemyData.count; i++) {
-      const z = new Zombie(scene);
+      const z = new Zombie(scene, {
+        collidables,
+        playerPosition: camera.position,
+      });
       zombies.push(z); // stocke la référence
       console.log(enemyData.name);
     }
