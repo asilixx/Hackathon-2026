@@ -18,6 +18,7 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 document.body.appendChild(renderer.domElement);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
 
 // -------------------- Controls, map et collisions --------------------
 const controls = new PointerLockControls(camera, document.body);
@@ -86,12 +87,7 @@ try {
 
 // -------------------- Raycaster --------------------
 
-const shootingSystem = new ShootingSystem(
-  camera,
-  controls,
-  collidables,
-  zombies,
-);
+const shootingSystem = new ShootingSystem(camera, controls, map.getCollidables(), zombies, player);
 
 // -------------------- Boucle d'animation --------------------
 let lastTime = performance.now();
