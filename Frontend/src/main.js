@@ -50,26 +50,36 @@ document.addEventListener("pointerlockchange", () => {
 });
 
 // -------------------- Gestion des zombies --------------------
-const zombies = []; // tableau pour stocker toutes les instances
-const wavenum = 1;
+const zombies = [];
+let wavenum = 1;
+let loadingWave = false;
+
+async function loadWave() {
+  loadingWave = true;
+  try {
+    const response = await fetch(`http://localhost:3000/waves/${wavenum}`);
+    if (!response.ok) throw new Error("Erreur API");
+
+    const wave = await response.json();
+    console.log(`Vague ${wavenum}`);
+
+    for (const enemyData of wave.enemies) {
+      for (let i = 0; i < enemyData.count; i++) {
+        zombies.push(
+          new Zombie(scene, {
+            collidables,
+            playerPosition: camera.position,
+          }),
+        );
+      }
+    }
+  } finally {
+    loadingWave = false;
+  }
+}
 
 try {
-  const response = await fetch(`http://localhost:3000/waves/${wavenum}`);
-  if (!response.ok) throw new Error("Erreur API");
-
-  const wave = await response.json();
-  console.log(wave);
-
-  for (const enemyData of wave.enemies) {
-    for (let i = 0; i < enemyData.count; i++) {
-      const z = new Zombie(scene, {
-        collidables,
-        playerPosition: camera.position,
-      });
-      zombies.push(z); // stocke la référence
-      console.log(enemyData.name);
-    }
-  }
+  await loadWave();
 } catch (err) {
   console.error(err);
 }
@@ -90,8 +100,18 @@ function animate() {
 
   player.update(dt);
 
-  for (const z of zombies) { // update tous les zombies
-    z.update(dt);
+  for (let i = zombies.length - 1; i >= 0; i--) {
+    if (zombies[i].isDead) {
+      zombies.splice(i, 1);
+      continue;
+    }
+
+    zombies[i].update(dt);
+  }
+
+  if (zombies.length === 0 && !loadingWave) {
+    wavenum++;
+    loadWave();
   }
 
   renderer.render(scene, camera);
