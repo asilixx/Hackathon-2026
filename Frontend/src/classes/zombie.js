@@ -67,7 +67,6 @@ export class Zombie {
 
     return new THREE.Vector3(0, 0, 0);
   }
-
   update(dt) {
     if (this.mixer) this.mixer.update(dt);
 
@@ -80,5 +79,9 @@ export class Zombie {
         size,
       );
     }
+  }
+  die() {
+    this.scene.remove(this.container);
+    this.scene.remove(this.hitboxHelper);
   }
 }

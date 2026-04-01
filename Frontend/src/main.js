@@ -4,6 +4,7 @@ import { Map } from "./classes/map.js";
 import { Player } from "./classes/player.js";
 import { Zombie } from "./classes/zombie.js";
 import Stats from "https://cdnjs.cloudflare.com/ajax/libs/stats.js/r17/Stats.min.js";
+import { ShootingSystem } from './classes/shootingSystem.js';
 
 // -------------------- Initialisation scène --------------------
 const scene = new THREE.Scene();
@@ -74,21 +75,9 @@ try {
 }
 
 // -------------------- Raycaster --------------------
-const raycaster = new THREE.Raycaster();
 
-document.addEventListener("click", () => {
-  if (!controls.isLocked) return;
-
-  raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
-
-  for (const z of zombies) { // boucle sur tous les zombies
-    if (raycaster.ray.intersectsBox(z.hitbox)) {
-      console.log("Zombie touché !");
-      // z.model.remove(); // décommenter si tu veux supprimer le modèle
-    }
-  }
-});
-
+const shootingSystem = new ShootingSystem(camera, controls, collidables, zombies);
+  
 // -------------------- Boucle d'animation --------------------
 let lastTime = performance.now();
 
