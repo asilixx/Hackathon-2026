@@ -1,5 +1,24 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
+
+const loader = new GLTFLoader();
+let zombieModel = null;
+let zombieAnimations = [];
+
+const zombieModelPromise = new Promise((resolve, reject) => {
+  loader.load(
+    "/animated_zombie_cop_running_loop/scene.gltf",
+    (gltf) => {
+      zombieModel = gltf.scene;
+      zombieAnimations = gltf.animations;
+      console.log("Modele zombie charge !");
+      resolve(gltf);
+    },
+    undefined,
+    reject
+  );
+});
 
 export class Zombie {
   constructor(scene, options = {}) {
@@ -23,18 +42,33 @@ export class Zombie {
     this.hitboxHelper = new THREE.Box3Helper(this.hitbox, 0xff0000);
     scene.add(this.hitboxHelper);
 
-    this.loader = new GLTFLoader();
-    this.loader.load("/animated_zombie_cop_running_loop/scene.gltf", (gltf) => {
-      this.model = gltf.scene;
+    this.initModel();
+  }
+
+  async initModel() {
+    try {
+      if (!zombieModel) {
+        await zombieModelPromise;
+      }
+
+      if (this.isDead || !zombieModel) {
+        return;
+      }
+
+      this.model = clone(zombieModel);
       this.container.add(this.model);
 
       this.mixer = new THREE.AnimationMixer(this.model);
-      const action = this.mixer.clipAction(gltf.animations[0]);
-      action.play();
 
-      // ✅ Zombie créé, log dans la console
-      console.log("Zombie créé !", this.model);
-    });
+      if (zombieAnimations.length > 0) {
+        const action = this.mixer.clipAction(zombieAnimations[0]);
+        action.play();
+      }
+
+      console.log("Zombie cree !");
+    } catch (error) {
+      console.error("Impossible de charger le zombie :", error);
+    }
   }
 
   getSpawnPosition() {
@@ -54,7 +88,7 @@ export class Zombie {
 
       spawnBox.setFromCenterAndSize(
         new THREE.Vector3(x, this.spawnSize.y / 2, z),
-        this.spawnSize,
+        this.spawnSize
       );
 
       const collides = this.collidables.some((obj) => {
@@ -69,26 +103,34 @@ export class Zombie {
 
     return new THREE.Vector3(0, 0, 0);
   }
+
   update(dt) {
+    if (this.isDead) return;
+
     if (this.mixer) this.mixer.update(dt);
+
     if (this.model) {
       const pos = new THREE.Vector3();
       this.model.getWorldPosition(pos);
+
       const size = new THREE.Vector3(0.7, 2.8, 1);
       this.hitbox.setFromCenterAndSize(
         pos.clone().add(new THREE.Vector3(0, size.y / 2, 0)),
-        size,
+        size
       );
     }
+
     this.move(dt);
   }
 
   die() {
     if (this.isDead) return;
+
     this.isDead = true;
     this.scene.remove(this.container);
     this.scene.remove(this.hitboxHelper);
   }
+
   move(dt) {
     if (!this.playerPosition || !this.model) return;
 
@@ -97,38 +139,40 @@ export class Zombie {
       .setY(0)
       .normalize();
 
-    // Essaie X et Z séparément
     const moveX = new THREE.Vector3(direction.x, 0, 0).multiplyScalar(
-      this.speed * dt,
+      this.speed * dt
     );
+
     const moveZ = new THREE.Vector3(0, 0, direction.z).multiplyScalar(
-      this.speed * dt,
+      this.speed * dt
     );
 
     const tryMove = (move) => {
       this.container.position.add(move);
+
       const box = new THREE.Box3().setFromCenterAndSize(
         this.container.position
           .clone()
           .add(new THREE.Vector3(0, this.spawnSize.y / 2, 0)),
-        this.spawnSize,
+        this.spawnSize
       );
+
       const blocked = this.collidables.some((obj) =>
-        box.intersectsBox(new THREE.Box3().setFromObject(obj)),
+        box.intersectsBox(new THREE.Box3().setFromObject(obj))
       );
-      if (blocked) this.container.position.sub(move); // annule seulement cet axe
+
+      if (blocked) this.container.position.sub(move);
     };
 
     tryMove(moveX);
     tryMove(moveZ);
 
-    // Tourne vers le joueur
     this.container.lookAt(
       new THREE.Vector3(
         this.playerPosition.x,
         this.container.position.y,
-        this.playerPosition.z,
-      ),
+        this.playerPosition.z
+      )
     );
   }
 }

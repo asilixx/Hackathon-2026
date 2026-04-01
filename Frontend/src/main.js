@@ -111,6 +111,7 @@ function animate() {
       continue;
     }
 
+    zombies[i].playerPosition = camera.position;
     zombies[i].update(dt);
   }
 
@@ -118,10 +119,6 @@ function animate() {
     wavenum++;
     loadWave();
   }
-  zombies.forEach((z) => {
-    z.playerPosition = camera.position;
-    z.update(dt);
-  });
 
   renderer.render(scene, camera);
   stats.end();
