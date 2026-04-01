@@ -70,6 +70,7 @@ async function loadWave() {
           new Zombie(scene, {
             collidables,
             playerPosition: camera.position,
+            player,
           }),
         );
       }
@@ -112,7 +113,7 @@ function animate() {
     zombies[i].update(dt);
   }
 
-  if (zombies.length === 0 && !loadingWave) {
+  if (!player.isDead && zombies.length === 0 && !loadingWave) {
     wavenum++;
     loadWave();
   }

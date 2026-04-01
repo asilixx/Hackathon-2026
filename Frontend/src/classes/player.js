@@ -10,6 +10,8 @@ export class Player {
 
     // --- Stats ---
     this.health = 100;
+    this.maxHealth = 100;
+    this.isDead = false;
     this.isReloading = false;
 
     // --- Mouvement ---
@@ -44,6 +46,7 @@ export class Player {
     this.scene.add(this.hitbox);
 
     this._initEventListeners();
+    this.updateHUD();
   }
 
   _loadWeapon() {
@@ -169,6 +172,10 @@ export class Player {
   }
 
   update(dt) {
+    if (this.isDead) {
+      return;
+    }
+
     // 1. Mouvement
     this.controls.getDirection(this.playerDirection);
     this.playerDirection.y = 0;
@@ -207,9 +214,43 @@ export class Player {
       this.mixer.update(dt);
     }
   }
+
+  takeDamage(amount) {
+    if (this.isDead) {
+      return;
+    }
+
+    this.health = Math.max(0, this.health - amount);
+    this.updateHUD();
+
+    if (this.health === 0) {
+      this.die();
+    }
+  }
+
+  die() {
+    this.isDead = true;
+    this.PlayerSpeedFoward = 0;
+    this.PlayerSpeedRight = 0;
+
+    if (this.controls.isLocked) {
+      this.controls.unlock();
+    }
+
+    const overlay = document.getElementById("overlay");
+    if (overlay) {
+      overlay.style.display = "flex";
+      overlay.innerHTML = "<h1>Game Over</h1><p>Tu as ete mange par les zombies</p>";
+    }
+  }
+
   updateHUD() {
-    const healthBar = document.getElementById("health-bar");
-    if (healthBar) healthBar.style.width = this.health + "%";
+    const healthBar = document.getElementById("health-bar-fill");
+    if (healthBar) {
+      const healthPercent = (this.health / this.maxHealth) * 100;
+      healthBar.style.width = healthPercent + "%";
+    }
+
     const ammoCurr = document.getElementById("ammo-current");
     const ammoTot = document.getElementById("ammo-total");
     if (ammoCurr) ammoCurr.innerText = this.currentAmmo;
