@@ -1,38 +1,62 @@
 import * as THREE from 'three';
 
 export class ShootingSystem {
-  constructor(camera, controls, collidables, zombies) {
+  constructor(camera, controls, collidables, zombies, player) {
     this.camera = camera;
     this.controls = controls;
     this.collidables = collidables;
     this.zombies = zombies;
+    this.player = player; // On récupère le player pour l'animation
+    
     this.raycaster = new THREE.Raycaster();
+    
+    // --- Paramètres de tir ---
+    this.canShoot = true;
+    this.fireRate = 400; // Temps en millisecondes entre deux tirs (0.4s)
 
-    document.addEventListener('click', () => this._shoot());
+    document.addEventListener('mousedown', (e) => {
+      // On tire seulement sur le clic gauche (bouton 0)
+      if (e.button === 0) this._shoot();
+    });
   }
 
   _shoot() {
-  if (!this.controls.isLocked) return;
+    // 1. Vérifications de sécurité
+    if (!this.controls.isLocked || !this.canShoot) return;
 
-  this.raycaster.setFromCamera(new THREE.Vector2(0, 0), this.camera);
+    // 2. Activer le Cooldown
+    this.canShoot = false;
+    
+    // 3. Lancer l'animation visuelle de l'arme sur le Player
+    if (this.player && this.player.playShootAnimation) {
+      this.player.playShootAnimation();
+    }
 
-  const wallHits = this.raycaster.intersectObjects(this.collidables, true);
+    // 4. Logique de calcul du tir (Raycasting)
+    this.raycaster.setFromCamera(new THREE.Vector2(0, 0), this.camera);
+
+    // On récupère toutes les intersections avec les murs
+    const wallHits = this.raycaster.intersectObjects(this.collidables, true);
 
     this.zombies.forEach(zombie => {
-    if (zombie.isDead) return;
-    if (!zombie.model) return;
+      if (zombie.isDead || !zombie.model) return;
 
-    const zombieDistance = this.camera.position.distanceTo(zombie.model.position);
+      // Calcul de la distance pour savoir si un mur est devant le zombie
+      const zombieDistance = this.camera.position.distanceTo(zombie.model.position);
+      const wallBlocking = wallHits.some(hit => hit.distance < zombieDistance);
 
-    const wallBlocking = wallHits.some(hit => hit.distance < zombieDistance);
+      if (wallBlocking) return;
 
-    if (wallBlocking) return;
+      // Vérification de l'impact sur la hitbox du zombie
+      if (this.raycaster.ray.intersectsBox(zombie.hitbox)) {
+        console.log('Zombie touché !');
+        zombie.die(); 
+      }
+    });
 
-    if (this.raycaster.ray.intersectsBox(zombie.hitbox)) {
-      console.log('Zombie touché !');
-
-      zombie.die(); 
-    }
-  });
-}
+    // 5. Reset du Cooldown après le délai
+    setTimeout(() => {
+      this.canShoot = true;
+    }, this.fireRate);
+  }
 }
