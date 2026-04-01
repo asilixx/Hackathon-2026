@@ -25,10 +25,14 @@ export class Zombie {
     this.scene = scene;
     this.collidables = options.collidables ?? [];
     this.playerPosition = options.playerPosition ?? null;
+    this.player = options.player ?? null;
     this.spawnSize = new THREE.Vector3(1.2, 3, 1.2);
     this.arenaLimit = options.arenaLimit ?? 24;
     this.playerMinDistance = options.playerMinDistance ?? 8;
     this.speed = options.speed ?? 2;
+    this.damage = options.damage ?? 10;
+    this.attackCooldown = options.attackCooldown ?? 800;
+    this.lastAttackAt = 0;
 
     this.container = new THREE.Group();
     this.container.position.copy(this.getSpawnPosition());
@@ -121,6 +125,7 @@ export class Zombie {
     }
 
     this.move(dt);
+    this.attackPlayer();
   }
 
   die() {
@@ -174,5 +179,23 @@ export class Zombie {
         this.playerPosition.z
       )
     );
+  }
+
+  attackPlayer() {
+    if (!this.player || this.player.isDead) {
+      return;
+    }
+
+    if (!this.hitbox.intersectsBox(this.player.PlayerHitBox)) {
+      return;
+    }
+
+    const now = performance.now();
+    if (now - this.lastAttackAt < this.attackCooldown) {
+      return;
+    }
+
+    this.lastAttackAt = now;
+    this.player.takeDamage(this.damage);
   }
 }
