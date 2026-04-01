@@ -1,0 +1,11 @@
+Model Information:
+* title:	Animated Zombie Cop Running Loop
+* source:	https://sketchfab.com/3d-models/animated-zombie-cop-running-loop-cd221e2b23b14798abf3afb2f31c123b
+* author:	LasquetiSpice (https://sketchfab.com/LasquetiSpice)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Animated Zombie Cop Running Loop" (https://sketchfab.com/3d-models/animated-zombie-cop-running-loop-cd221e2b23b14798abf3afb2f31c123b) by LasquetiSpice (https://sketchfab.com/LasquetiSpice) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
