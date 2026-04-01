@@ -4,7 +4,7 @@ import { Map } from "./classes/map.js";
 import { Player } from "./classes/player.js";
 import { Zombie } from "./classes/zombie.js";
 import Stats from "https://cdnjs.cloudflare.com/ajax/libs/stats.js/r17/Stats.min.js";
-import { ShootingSystem } from './classes/shootingSystem.js';
+import { ShootingSystem } from "./classes/shootingSystem.js";
 
 // -------------------- Initialisation scène --------------------
 const scene = new THREE.Scene();
@@ -12,7 +12,7 @@ const camera = new THREE.PerspectiveCamera(
   75,
   window.innerWidth / window.innerHeight,
   0.1,
-  200
+  200,
 );
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -86,8 +86,13 @@ try {
 
 // -------------------- Raycaster --------------------
 
-const shootingSystem = new ShootingSystem(camera, controls, collidables, zombies);
-  
+const shootingSystem = new ShootingSystem(
+  camera,
+  controls,
+  collidables,
+  zombies,
+);
+
 // -------------------- Boucle d'animation --------------------
 let lastTime = performance.now();
 
@@ -113,6 +118,10 @@ function animate() {
     wavenum++;
     loadWave();
   }
+  zombies.forEach((z) => {
+    z.playerPosition = camera.position;
+    z.update(dt);
+  });
 
   renderer.render(scene, camera);
   stats.end();

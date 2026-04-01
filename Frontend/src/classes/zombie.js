@@ -9,6 +9,7 @@ export class Zombie {
     this.spawnSize = new THREE.Vector3(1.2, 3, 1.2);
     this.arenaLimit = options.arenaLimit ?? 24;
     this.playerMinDistance = options.playerMinDistance ?? 8;
+    this.speed = options.speed ?? 2;
 
     this.container = new THREE.Group();
     this.container.position.copy(this.getSpawnPosition());
@@ -70,7 +71,6 @@ export class Zombie {
   }
   update(dt) {
     if (this.mixer) this.mixer.update(dt);
-
     if (this.model) {
       const pos = new THREE.Vector3();
       this.model.getWorldPosition(pos);
@@ -80,12 +80,55 @@ export class Zombie {
         size,
       );
     }
+    this.move(dt);
   }
+
   die() {
     if (this.isDead) return;
-
     this.isDead = true;
     this.scene.remove(this.container);
     this.scene.remove(this.hitboxHelper);
+  }
+  move(dt) {
+    if (!this.playerPosition || !this.model) return;
+
+    const direction = new THREE.Vector3()
+      .subVectors(this.playerPosition, this.container.position)
+      .setY(0)
+      .normalize();
+
+    // Essaie X et Z séparément
+    const moveX = new THREE.Vector3(direction.x, 0, 0).multiplyScalar(
+      this.speed * dt,
+    );
+    const moveZ = new THREE.Vector3(0, 0, direction.z).multiplyScalar(
+      this.speed * dt,
+    );
+
+    const tryMove = (move) => {
+      this.container.position.add(move);
+      const box = new THREE.Box3().setFromCenterAndSize(
+        this.container.position
+          .clone()
+          .add(new THREE.Vector3(0, this.spawnSize.y / 2, 0)),
+        this.spawnSize,
+      );
+      const blocked = this.collidables.some((obj) =>
+        box.intersectsBox(new THREE.Box3().setFromObject(obj)),
+      );
+      if (blocked) this.container.position.sub(move); // annule seulement cet axe
+    };
+
+    tryMove(moveX);
+    tryMove(moveZ);
+
+    // Tourne vers le joueur
+    this.container.lookAt(
+      new THREE.Vector3(
+        this.playerPosition.x,
+        this.container.position.y,
+        this.playerPosition.z,
+      ),
+    );
   }
 }
