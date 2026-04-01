@@ -5,13 +5,13 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node serveur.js",
-    "dev": "nodemon serveur.js"
+    "start": "node Backend/serveur.js",
+    "dev": "node Backend/serveur.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "dependencies": {
     "better-sqlite3": "^12.8.0",
     "cors": "^2.8.6",
