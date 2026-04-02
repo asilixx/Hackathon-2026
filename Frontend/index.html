@@ -216,13 +216,15 @@
         flex-direction: column;
         align-items: center;
         justify-content: flex-start;
-        padding-top: 5vh;
+        padding: 5vh 20px 24px;
         background:
           radial-gradient(ellipse at 50% 10%, rgba(100,10,10,0.3) 0%, transparent 60%),
           linear-gradient(180deg, #0a0a07 0%, #111109 100%);
         z-index: 200;
         gap: 1.5rem;
         animation: fadeIn 0.3s ease;
+        overflow-y: auto;
+        overflow-x: hidden;
       }
 
       .sub-page.active { display: flex; }
@@ -318,10 +320,24 @@
       /* ─── CLASSEMENT ─── */
       .leaderboard {
         width: min(480px, 85vw);
+        max-width: 100%;
         background: var(--panel-bg);
         border: 1px solid rgba(192,57,43,0.25);
         padding: 1.5rem;
         clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+      }
+
+      @media (max-height: 760px) {
+        .sub-page {
+          gap: 1rem;
+          padding-top: 72px;
+        }
+
+        .controls-grid,
+        .leaderboard {
+          width: min(420px, 88vw);
+          padding: 1.25rem;
+        }
       }
 
       .lb-header {
