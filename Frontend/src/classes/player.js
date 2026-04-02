@@ -129,7 +129,25 @@ export class Player {
   }
 
   _initEventListeners() {
-    document.body.addEventListener("click", () => this.controls.lock());
+    document.body.addEventListener("click", (event) => {
+      const target = event.target;
+      const menuVisible =
+        document.getElementById("main-menu")?.style.display !== "none";
+      const activeSubPage = document.querySelector(".sub-page.active");
+      const quitConfirmOpen =
+        document.getElementById("quit-confirm")?.classList.contains("active");
+
+      if (
+        menuVisible ||
+        activeSubPage ||
+        quitConfirmOpen ||
+        target.closest("input, button, textarea, select, label")
+      ) {
+        return;
+      }
+
+      this.controls.lock();
+    });
 
     document.addEventListener("keydown", (e) => {
       switch (e.code) {
@@ -264,6 +282,18 @@ export class Player {
     if (typeof this.onDeath === "function") {
       this.onDeath();
     }
+  }
+
+  reset() {
+    this.health = this.maxHealth;
+    this.isDead = false;
+    this.isReloading = false;
+    this.PlayerSpeedFoward = 0;
+    this.PlayerSpeedRight = 0;
+    this.velocityY = 0;
+    this.onGround = true;
+    this.currentAmmo = this.ammoPerClip;
+    this.updateHUD();
   }
 
   updateHUD() {

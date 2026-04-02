@@ -91,6 +91,22 @@ async function saveScore() {
   }
 }
 
+function resetGame() {
+  for (const zombie of zombies) {
+    zombie.die();
+  }
+  zombies.length = 0;
+
+  wavenum = 1;
+  loadingWave = false;
+  scoreSaved = false;
+  zombiesKilled = 0;
+
+  camera.position.set(0, 2.5, 0);
+  player.reset();
+  updateWaveIndicator();
+}
+
 async function loadWave() {
   loadingWave = true;
   updateWaveIndicator();
@@ -126,11 +142,14 @@ async function loadWave() {
 let gameStarted = false;
 
 window.addEventListener("game:start", (event) => {
-  if (gameStarted) return;
-  gameStarted = true;
   playerName = event.detail?.playerName?.trim() ?? "";
-  scoreSaved = false;
-  zombiesKilled = 0;
+
+  if (!gameStarted) {
+    gameStarted = true;
+  } else {
+    resetGame();
+  }
+
   controls.lock();
   loadWave();
 });
