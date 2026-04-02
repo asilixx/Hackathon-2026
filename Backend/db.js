@@ -17,4 +17,21 @@ db.exec(`
   )
 `);
 
+const columns = db.prepare("PRAGMA table_info(scores)").all();
+const hasWave = columns.some((column) => column.name === "wave");
+const hasZombiesKilled = columns.some(
+  (column) => column.name === "zombies_killed",
+);
+
+if (!hasWave) {
+  db.exec("ALTER TABLE scores ADD COLUMN wave INTEGER NOT NULL DEFAULT 1");
+  db.exec("UPDATE scores SET wave = score WHERE wave IS NULL OR wave = 1");
+}
+
+if (!hasZombiesKilled) {
+  db.exec(
+    "ALTER TABLE scores ADD COLUMN zombies_killed INTEGER NOT NULL DEFAULT 0",
+  );
+}
+
 export default db;

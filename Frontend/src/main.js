@@ -33,11 +33,25 @@ const player = new Player(camera, scene, collisionManager, controls);
 
 // -------------------- Zombies & Shooting --------------------
 const zombies = [];
-const shootingSystem = new ShootingSystem(camera, controls, collidables, zombies, player);
+let zombiesKilled = 0;
+const shootingSystem = new ShootingSystem(
+  camera,
+  controls,
+  collidables,
+  zombies,
+  player,
+  {
+    onZombieKilled: () => {
+      zombiesKilled++;
+    },
+  },
+);
 
 // -------------------- Vagues --------------------
 let wavenum = 1;
 let loadingWave = false;
+let playerName = "";
+let scoreSaved = false;
 const waveIndicator = document.getElementById("wave-indicator");
 
 function updateWaveIndicator() {
@@ -46,6 +60,35 @@ function updateWaveIndicator() {
 
 function fallbackWave(num) {
   return { enemies: [{ count: 2 + num * 2, speed: 1.5 + num * 0.3 }] };
+}
+
+async function saveScore() {
+  if (scoreSaved || !playerName) {
+    return;
+  }
+
+  scoreSaved = true;
+
+  try {
+    const response = await fetch("http://localhost:3000/scores", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        pseudo: playerName,
+        score: zombiesKilled,
+        wave: wavenum,
+        zombiesKilled,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Impossible d'enregistrer le score");
+    }
+  } catch (error) {
+    console.error("Echec de l'enregistrement du score :", error);
+  }
 }
 
 async function loadWave() {
@@ -82,12 +125,19 @@ async function loadWave() {
 // -------------------- Démarrage via menu --------------------
 let gameStarted = false;
 
-window.addEventListener("game:start", () => {
+window.addEventListener("game:start", (event) => {
   if (gameStarted) return;
   gameStarted = true;
+  playerName = event.detail?.playerName?.trim() ?? "";
+  scoreSaved = false;
+  zombiesKilled = 0;
   controls.lock();
   loadWave();
 });
+
+player.onDeath = () => {
+  saveScore();
+};
 
 document.addEventListener("pointerlockchange", () => {
   // Retour au menu géré par index.html (touche Échap)

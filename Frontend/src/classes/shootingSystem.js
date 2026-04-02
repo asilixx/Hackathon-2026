@@ -32,12 +32,13 @@ function showHitmarker(kill = false) {
 
 // ── ShootingSystem ────────────────────────────────────────────
 export class ShootingSystem {
-  constructor(camera, controls, collidables, zombies, player) {
+  constructor(camera, controls, collidables, zombies, player, options = {}) {
     this.camera     = camera;
     this.controls   = controls;
     this.collidables = collidables;
     this.zombies    = zombies;
     this.player     = player;
+    this.onZombieKilled = options.onZombieKilled ?? null;
 
     this.raycaster  = new THREE.Raycaster();
     this.canShoot   = true;
@@ -81,6 +82,9 @@ export class ShootingSystem {
         if (!zombie.isDead) {
           zombie.die();
           kill = true;
+          if (typeof this.onZombieKilled === "function") {
+            this.onZombieKilled(zombie);
+          }
         }
       }
     });

@@ -44,12 +44,13 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
+        padding: clamp(56px, 8vh, 96px) 20px clamp(20px, 4vh, 40px);
         background:
           radial-gradient(ellipse at 50% 30%, rgba(100,10,10,0.35) 0%, transparent 70%),
           radial-gradient(ellipse at 80% 80%, rgba(30,60,10,0.2) 0%, transparent 60%),
           linear-gradient(180deg, #0a0a07 0%, #111109 60%, #0d0d0a 100%);
         z-index: 100;
-        gap: 0;
+        gap: clamp(0.35rem, 1vh, 0.75rem);
       }
 
       /* Animated blood drips at top */
@@ -79,7 +80,7 @@
 
       .menu-title {
         font-family: 'Creepster', cursive;
-        font-size: clamp(3.5rem, 10vw, 7rem);
+        font-size: clamp(2.5rem, 8vh, 5.5rem);
         color: var(--bone);
         text-shadow:
           0 0 20px var(--blood),
@@ -87,7 +88,8 @@
           4px 4px 0px #000,
           -2px -2px 0px #000;
         letter-spacing: 0.08em;
-        margin-bottom: 0.2em;
+        line-height: 0.9;
+        margin-bottom: 0;
         animation: flicker 4s infinite;
       }
 
@@ -101,31 +103,67 @@
       }
 
       .menu-subtitle {
-        font-size: 0.85rem;
+        font-size: clamp(0.65rem, 1.3vh, 0.85rem);
         color: var(--green-zombie);
-        letter-spacing: 0.4em;
+        letter-spacing: clamp(0.16em, 0.5vw, 0.35em);
         text-transform: uppercase;
-        margin-bottom: 3.5rem;
+        margin-bottom: clamp(0.75rem, 2vh, 1.5rem);
         opacity: 0.75;
         text-shadow: 0 0 12px var(--green-zombie);
+        text-align: center;
       }
 
       .menu-buttons {
         display: flex;
         flex-direction: column;
-        gap: 1rem;
+        gap: clamp(0.45rem, 1.2vh, 0.85rem);
         width: min(320px, 80vw);
+      }
+
+      .menu-name-box {
+        width: min(320px, 80vw);
+        margin-bottom: clamp(0.35rem, 1vh, 0.75rem);
+      }
+
+      .menu-name-input {
+        width: 100%;
+        padding: clamp(0.7rem, 1.5vh, 0.95rem) 1rem;
+        background: rgba(10, 10, 8, 0.88);
+        border: 1px solid rgba(240,230,200,0.2);
+        color: var(--bone);
+        font-family: 'Special Elite', serif;
+        font-size: clamp(0.85rem, 1.6vh, 0.95rem);
+        letter-spacing: 0.08em;
+        outline: none;
+      }
+
+      .menu-name-input:focus {
+        border-color: var(--green-zombie);
+        box-shadow: 0 0 12px rgba(57,211,83,0.2);
+      }
+
+      .menu-name-input::placeholder {
+        color: rgba(240,230,200,0.45);
+        letter-spacing: 0.08em;
+      }
+
+      .menu-name-error {
+        min-height: 0.85rem;
+        margin-top: 0.35rem;
+        color: #ff8e8e;
+        font-size: clamp(0.65rem, 1.2vh, 0.75rem);
+        letter-spacing: 0.08em;
       }
 
       .menu-btn {
         position: relative;
-        padding: 1rem 2rem;
+        padding: clamp(0.75rem, 1.6vh, 0.95rem) 1.6rem;
         background: var(--panel-bg);
         border: 1px solid rgba(192,57,43,0.4);
         color: var(--bone);
         font-family: 'Special Elite', serif;
-        font-size: 1.1rem;
-        letter-spacing: 0.2em;
+        font-size: clamp(0.85rem, 1.8vh, 1.02rem);
+        letter-spacing: clamp(0.08em, 0.35vw, 0.18em);
         text-transform: uppercase;
         cursor: crosshair;
         transition: all 0.2s ease;
@@ -164,10 +202,11 @@
 
       .menu-footer {
         position: absolute;
-        bottom: 20px;
-        font-size: 0.7rem;
+        bottom: 16px;
+        font-size: clamp(0.55rem, 1vh, 0.7rem);
         color: rgba(240,230,200,0.25);
-        letter-spacing: 0.2em;
+        letter-spacing: clamp(0.08em, 0.25vw, 0.2em);
+        text-align: center;
       }
 
       /* ─── SUB-PAGES (Classement / Contrôles) ─── */
@@ -463,6 +502,18 @@
       <h1 class="menu-title">DEAD ZONE</h1>
       <p class="menu-subtitle">Survie &bull; Horreur &bull; Action</p>
 
+      <div class="menu-name-box">
+        <input
+          id="player-name"
+          class="menu-name-input"
+          type="text"
+          maxlength="30"
+          placeholder="Entre ton nom"
+          autocomplete="off"
+        />
+        <p id="player-name-error" class="menu-name-error"></p>
+      </div>
+
       <div class="menu-buttons">
         <button class="menu-btn play" id="btn-play">
           <span>▶ &nbsp; Jouer</span>
@@ -526,7 +577,7 @@
           <span>#</span>
           <span>Joueur</span>
           <span style="text-align:center">Vague</span>
-          <span style="text-align:right">Score</span>
+          <span style="text-align:right">Kills</span>
         </div>
         <div id="lb-body">
           <div class="lb-empty">— Aucune partie enregistrée —</div>
@@ -573,10 +624,21 @@
          MENU LOGIC
     ════════════════════════════════════════════ -->
     <script>
-      // ── Leaderboard (localStorage) ──────────────
-      function loadLeaderboard() {
-        const scores = JSON.parse(localStorage.getItem('zg_scores') || '[]');
+      // ── Leaderboard (backend) ───────────────────
+      async function loadLeaderboard() {
         const body = document.getElementById('lb-body');
+
+        body.innerHTML = '<div class="lb-empty">Chargement...</div>';
+
+        let scores = [];
+        try {
+          const response = await fetch('http://localhost:3000/scores/top?limit=10');
+          if (!response.ok) throw new Error('Leaderboard unavailable');
+          scores = await response.json();
+        } catch (error) {
+          body.innerHTML = '<div class="lb-empty">— Backend indisponible —</div>';
+          return;
+        }
 
         if (!scores.length) {
           body.innerHTML = '<div class="lb-empty">— Aucune partie enregistrée —</div>';
@@ -590,9 +652,9 @@
           .map((s, i) => `
             <div class="lb-row ${topClass[i] || ''}">
               <span class="lb-rank">${i+1}</span>
-              <span class="lb-name">${s.name || 'Anonyme'}</span>
+              <span class="lb-name">${s.pseudo || 'Anonyme'}</span>
               <span class="lb-wave">${s.wave || 1}</span>
-              <span class="lb-score">${s.score.toLocaleString()}</span>
+              <span class="lb-score">${(s.zombiesKilled || 0).toLocaleString()}</span>
             </div>`)
           .join('');
       }
@@ -616,8 +678,8 @@
 
       document.getElementById('btn-controls').addEventListener('click', () => showPage(pageCtrl));
 
-      document.getElementById('btn-leaderboard').addEventListener('click', () => {
-        loadLeaderboard();
+      document.getElementById('btn-leaderboard').addEventListener('click', async () => {
+        await loadLeaderboard();
         showPage(pageLb);
       });
 
@@ -639,8 +701,22 @@
 
       // ── Play ─────────────────────────────────────
       document.getElementById('btn-play').addEventListener('click', startGame);
+      document.getElementById('player-name').addEventListener('keydown', e => {
+        if (e.key === 'Enter') startGame();
+      });
 
       function startGame() {
+        const nameInput = document.getElementById('player-name');
+        const errorBox = document.getElementById('player-name-error');
+        const playerName = nameInput.value.trim();
+
+        if (!playerName) {
+          errorBox.textContent = 'Entre un nom avant de lancer la partie.';
+          nameInput.focus();
+          return;
+        }
+
+        errorBox.textContent = '';
         mainMenu.style.display = 'none';
         // Show HUD elements
         document.getElementById('crosshair').style.display = 'block';
@@ -652,7 +728,9 @@
         document.body.requestPointerLock?.();
 
         // Dispatch a custom event so main.js knows to start
-        window.dispatchEvent(new Event('game:start'));
+        window.dispatchEvent(new CustomEvent('game:start', {
+          detail: { playerName }
+        }));
       }
 
       // ── Keyboard shortcut: Échap to toggle menu ──
