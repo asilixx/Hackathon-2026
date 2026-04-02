@@ -229,6 +229,10 @@ export class Player {
   }
 
   die() {
+    if (this.isDead) {
+      return;
+    }
+
     this.isDead = true;
     this.PlayerSpeedFoward = 0;
     this.PlayerSpeedRight = 0;
@@ -237,10 +241,28 @@ export class Player {
       this.controls.unlock();
     }
 
-    const overlay = document.getElementById("overlay");
-    if (overlay) {
-      overlay.style.display = "flex";
-      overlay.innerHTML = "<h1>Game Over</h1><p>Tu as ete mange par les zombies</p>";
+    const mainMenu = document.getElementById("main-menu");
+    if (mainMenu) {
+      mainMenu.style.display = "flex";
+    }
+
+    const nameError = document.getElementById("player-name-error");
+    if (nameError) {
+      nameError.textContent = "Partie terminee. Score enregistre a la mort.";
+    }
+
+    const crosshair = document.getElementById("crosshair");
+    const hud = document.getElementById("hud");
+    const ui = document.getElementById("ui");
+    const waveIndicator = document.getElementById("wave-indicator");
+
+    if (crosshair) crosshair.style.display = "none";
+    if (hud) hud.style.display = "none";
+    if (ui) ui.style.display = "none";
+    if (waveIndicator) waveIndicator.style.display = "none";
+
+    if (typeof this.onDeath === "function") {
+      this.onDeath();
     }
   }
 
