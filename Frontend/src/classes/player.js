@@ -28,7 +28,7 @@ export class Player {
     // Ammo
     this.ammoPerClip = 12; // Capacité du chargeur
     this.currentAmmo = 12; // Balles restantes dans le chargeur
-    this.totalAmmo = 48; // Réserve totale
+    this.totalAmmo = 10000; // Réserve totale
     this.isReloading = false;
 
     // --- Système d'Animation ---
