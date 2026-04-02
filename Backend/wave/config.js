@@ -6,7 +6,7 @@ const config = {
   },
   enemy: {
     baseSpeed: 1.5,
-    speedMultiplier: 0.3,
+    speedMultiplier: 0.2,
     baseHp: 1,
     hpMultiplier: 0.8,
   },
