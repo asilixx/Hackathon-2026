@@ -42,8 +42,8 @@ export class Player {
     this._loadWeapon();
 
     // Hitbox Debug
-    this.hitbox = new THREE.Box3Helper(this.PlayerHitBox, 0xffff00);
-    this.scene.add(this.hitbox);
+    // this.hitbox = new THREE.Box3Helper(this.PlayerHitBox, 0xffff00);
+    // this.scene.add(this.hitbox);
 
     this._initEventListeners();
     this.updateHUD();
