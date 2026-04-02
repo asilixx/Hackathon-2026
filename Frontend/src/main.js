@@ -44,6 +44,7 @@ document.body.appendChild(stats.dom);
 
 // -------------------- Overlay pour pointer lock --------------------
 const overlay = document.getElementById("overlay");
+const waveIndicator = document.getElementById("wave-indicator");
 overlay.addEventListener("click", () => (overlay.style.display = "none"));
 
 document.addEventListener("pointerlockchange", () => {
@@ -55,9 +56,16 @@ const zombies = [];
 let wavenum = 1;
 let loadingWave = false;
 
+function updateWaveIndicator() {
+  if (waveIndicator) {
+    waveIndicator.textContent = `VAGUE ${wavenum}`;
+  }
+}
+
 async function loadWave() {
   loadingWave = true;
   try {
+    updateWaveIndicator();
     const response = await fetch(`http://localhost:3000/waves/${wavenum}`);
     if (!response.ok) throw new Error("Erreur API");
 

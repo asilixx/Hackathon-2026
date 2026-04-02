@@ -72,6 +72,17 @@
         margin-top: 5px;
         font-weight: bold;
       }
+      #wave-indicator {
+        position: fixed;
+        right: 20px;
+        bottom: 20px;
+        color: rgba(255, 255, 255, 0.8);
+        font-family: "Courier New", Courier, monospace;
+        font-size: 12px;
+        text-shadow: 1px 1px 2px #000;
+        z-index: 10;
+        pointer-events: none;
+      }
     </style>
   </head>
   <body>
@@ -100,6 +111,7 @@
       </div>
       <span id="ammo-total">10000</span>
     </div>
+    <div id="wave-indicator">VAGUE 1</div>
 
     <script type="module" src="src/main.js"></script>
   </body>
