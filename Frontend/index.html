@@ -2,608 +2,275 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <title>Zombie Game</title>
+    <title>Dead Zone</title>
     <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Special+Elite&display=swap" rel="stylesheet" />
     <style>
       :root {
-        --blood: #c0392b;
-        --blood-dark: #7b241c;
-        --gore: #e74c3c;
-        --rust: #a04000;
-        --bone: #f0e6c8;
-        --fog: rgba(20, 20, 15, 0.92);
-        --green-zombie: #39d353;
-        --panel-bg: rgba(10, 10, 8, 0.88);
+        --blood: #c0392b; --blood-dark: #7b241c; --gore: #e74c3c;
+        --bone: #f0e6c8; --green: #39d353;
+        --panel: rgba(10,10,8,0.88);
       }
+      * { margin:0; padding:0; box-sizing:border-box; }
+      body { overflow:hidden; background:#000; font-family:'Special Elite',serif; cursor:crosshair; }
 
-      * { margin: 0; padding: 0; box-sizing: border-box; }
-
-      body {
-        overflow: hidden;
-        background: #000;
-        font-family: 'Special Elite', serif;
-        cursor: crosshair;
-      }
-
-      canvas { display: block; }
-
-      /* ─── NOISE OVERLAY ─── */
-      body::before {
-        content: '';
-        position: fixed; inset: 0;
-        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
-        pointer-events: none;
-        z-index: 9999;
-        opacity: 0.4;
-      }
-
-      /* ─── MAIN MENU ─── */
+      /* ── MAIN MENU ── */
       #main-menu {
-        position: fixed; inset: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: clamp(56px, 8vh, 96px) 20px clamp(20px, 4vh, 40px);
-        background:
-          radial-gradient(ellipse at 50% 30%, rgba(100,10,10,0.35) 0%, transparent 70%),
-          radial-gradient(ellipse at 80% 80%, rgba(30,60,10,0.2) 0%, transparent 60%),
-          linear-gradient(180deg, #0a0a07 0%, #111109 60%, #0d0d0a 100%);
-        z-index: 100;
-        gap: clamp(0.35rem, 1vh, 0.75rem);
+        position:fixed; inset:0; display:flex; flex-direction:column;
+        align-items:center; justify-content:center; z-index:100; gap:0;
+        background: radial-gradient(ellipse at 50% 30%,rgba(100,10,10,.35) 0%,transparent 70%),
+                    linear-gradient(180deg,#0a0a07 0%,#111109 60%,#0d0d0a 100%);
       }
-
-      /* Animated blood drips at top */
       #main-menu::before {
-        content: '';
-        position: absolute;
-        top: 0; left: 0; right: 0;
-        height: 80px;
-        background: repeating-linear-gradient(
-          90deg,
-          var(--blood) 0px, var(--blood) 4px,
-          transparent 4px, transparent 30px,
-          var(--blood) 30px, var(--blood) 34px,
-          transparent 34px, transparent 80px,
-          var(--blood-dark) 80px, var(--blood-dark) 82px,
-          transparent 82px, transparent 130px
-        );
-        -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 80'%3E%3Crect width='400' height='80' fill='white'/%3E%3C/svg%3E");
-        mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
-        animation: drip 3s ease-in-out infinite alternate;
+        content:''; position:absolute; top:0; left:0; right:0; height:6px;
+        background:var(--blood); box-shadow:0 0 20px var(--blood);
+        animation:drip 3s ease-in-out infinite alternate;
       }
-
-      @keyframes drip {
-        from { transform: scaleY(0.95) translateY(-4px); }
-        to   { transform: scaleY(1.08) translateY(2px); }
-      }
+      @keyframes drip { from{transform:scaleY(.9)} to{transform:scaleY(1.1)} }
 
       .menu-title {
-        font-family: 'Creepster', cursive;
-        font-size: clamp(2.5rem, 8vh, 5.5rem);
-        color: var(--bone);
-        text-shadow:
-          0 0 20px var(--blood),
-          0 0 60px rgba(192,57,43,0.4),
-          4px 4px 0px #000,
-          -2px -2px 0px #000;
-        letter-spacing: 0.08em;
-        line-height: 0.9;
-        margin-bottom: 0;
-        animation: flicker 4s infinite;
+        font-family:'Creepster',cursive;
+        font-size:clamp(3.5rem,10vw,7rem);
+        color:var(--bone);
+        text-shadow:0 0 20px var(--blood),0 0 60px rgba(192,57,43,.4),4px 4px 0 #000;
+        letter-spacing:.08em; margin-bottom:.2em;
+        animation:flicker 4s infinite;
       }
-
       @keyframes flicker {
-        0%,100% { opacity: 1; }
-        92%      { opacity: 1; }
-        93%      { opacity: 0.7; }
-        94%      { opacity: 1; }
-        96%      { opacity: 0.85; }
-        97%      { opacity: 1; }
+        0%,100%{opacity:1} 92%{opacity:1} 93%{opacity:.7} 94%{opacity:1} 96%{opacity:.85} 97%{opacity:1}
       }
-
       .menu-subtitle {
-        font-size: clamp(0.65rem, 1.3vh, 0.85rem);
-        color: var(--green-zombie);
-        letter-spacing: clamp(0.16em, 0.5vw, 0.35em);
-        text-transform: uppercase;
-        margin-bottom: clamp(0.75rem, 2vh, 1.5rem);
-        opacity: 0.75;
-        text-shadow: 0 0 12px var(--green-zombie);
-        text-align: center;
+        font-size:.85rem; color:var(--green); letter-spacing:.4em;
+        text-transform:uppercase; margin-bottom:.8rem; opacity:.75;
+        text-shadow:0 0 12px var(--green);
       }
 
-      .menu-buttons {
-        display: flex;
-        flex-direction: column;
-        gap: clamp(0.45rem, 1.2vh, 0.85rem);
-        width: min(320px, 80vw);
+      /* Champ nom joueur */
+      .name-row {
+        display:flex; gap:.5rem; margin-bottom:2rem; width:min(320px,80vw);
+      }
+      .name-input {
+        flex:1; padding:.6rem 1rem;
+        background:rgba(10,10,8,.9); border:1px solid rgba(192,57,43,.4);
+        color:var(--bone); font-family:'Special Elite',serif; font-size:.9rem;
+        letter-spacing:.05em; outline:none;
+        clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px));
+      }
+      .name-input::placeholder { color:rgba(240,230,200,.3); }
+      .name-input:focus { border-color:var(--gore); }
+      #player-name-error {
+        font-size:.75rem; color:var(--gore); margin-top:-.5rem;
+        margin-bottom:.5rem; min-height:1rem; text-align:center;
+        width:min(320px,80vw);
       }
 
-      .menu-name-box {
-        width: min(320px, 80vw);
-        margin-bottom: clamp(0.35rem, 1vh, 0.75rem);
-      }
-
-      .menu-name-input {
-        width: 100%;
-        padding: clamp(0.7rem, 1.5vh, 0.95rem) 1rem;
-        background: rgba(10, 10, 8, 0.88);
-        border: 1px solid rgba(240,230,200,0.2);
-        color: var(--bone);
-        font-family: 'Special Elite', serif;
-        font-size: clamp(0.85rem, 1.6vh, 0.95rem);
-        letter-spacing: 0.08em;
-        outline: none;
-      }
-
-      .menu-name-input:focus {
-        border-color: var(--green-zombie);
-        box-shadow: 0 0 12px rgba(57,211,83,0.2);
-      }
-
-      .menu-name-input::placeholder {
-        color: rgba(240,230,200,0.45);
-        letter-spacing: 0.08em;
-      }
-
-      .menu-name-error {
-        min-height: 0.85rem;
-        margin-top: 0.35rem;
-        color: #ff8e8e;
-        font-size: clamp(0.65rem, 1.2vh, 0.75rem);
-        letter-spacing: 0.08em;
-      }
-
+      .menu-buttons { display:flex; flex-direction:column; gap:.9rem; width:min(320px,80vw); }
       .menu-btn {
-        position: relative;
-        padding: clamp(0.75rem, 1.6vh, 0.95rem) 1.6rem;
-        background: var(--panel-bg);
-        border: 1px solid rgba(192,57,43,0.4);
-        color: var(--bone);
-        font-family: 'Special Elite', serif;
-        font-size: clamp(0.85rem, 1.8vh, 1.02rem);
-        letter-spacing: clamp(0.08em, 0.35vw, 0.18em);
-        text-transform: uppercase;
-        cursor: crosshair;
-        transition: all 0.2s ease;
-        clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
-        overflow: hidden;
+        position:relative; padding:.9rem 2rem;
+        background:var(--panel); border:1px solid rgba(192,57,43,.4);
+        color:var(--bone); font-family:'Special Elite',serif;
+        font-size:1.05rem; letter-spacing:.2em; text-transform:uppercase;
+        cursor:crosshair; transition:all .2s;
+        clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));
+        overflow:hidden;
       }
-
       .menu-btn::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(90deg, var(--blood) 0%, transparent 0%);
-        width: 0%;
-        transition: width 0.3s ease;
-        z-index: 0;
-        opacity: 0.3;
+        content:''; position:absolute; inset:0;
+        background:linear-gradient(90deg,var(--blood) 0%,transparent 0%);
+        width:0%; transition:width .3s; z-index:0; opacity:.3;
       }
+      .menu-btn:hover::before { width:100%; }
+      .menu-btn:hover { border-color:var(--gore); color:#fff; text-shadow:0 0 10px var(--gore); transform:translateX(6px); }
+      .menu-btn span { position:relative; z-index:1; }
+      .menu-btn.play { border-color:rgba(57,211,83,.5); }
+      .menu-btn.play::before { background:linear-gradient(90deg,rgba(57,211,83,.2) 0%,transparent 0%); }
+      .menu-btn.play:hover { border-color:var(--green); color:var(--green); text-shadow:0 0 10px var(--green); }
+      .menu-btn.quit:hover { border-color:#555; color:#888; }
+      .menu-footer { position:absolute; bottom:16px; font-size:.65rem; color:rgba(240,230,200,.2); letter-spacing:.2em; }
 
-      .menu-btn:hover::before { width: 100%; }
-
-      .menu-btn:hover {
-        border-color: var(--gore);
-        color: #fff;
-        text-shadow: 0 0 10px var(--gore);
-        transform: translateX(6px);
-        box-shadow: -4px 0 0 var(--blood), inset 0 0 20px rgba(192,57,43,0.1);
-      }
-
-      .menu-btn span { position: relative; z-index: 1; }
-
-      .menu-btn.play { border-color: rgba(57,211,83,0.5); }
-      .menu-btn.play::before { background: linear-gradient(90deg, rgba(57,211,83,0.2) 0%, transparent 0%); }
-      .menu-btn.play:hover { border-color: var(--green-zombie); color: var(--green-zombie); text-shadow: 0 0 10px var(--green-zombie); }
-
-      .menu-btn.quit:hover { border-color: #555; color: #888; }
-
-      .menu-footer {
-        position: absolute;
-        bottom: 16px;
-        font-size: clamp(0.55rem, 1vh, 0.7rem);
-        color: rgba(240,230,200,0.25);
-        letter-spacing: clamp(0.08em, 0.25vw, 0.2em);
-        text-align: center;
-      }
-
-      /* ─── SUB-PAGES (Classement / Contrôles) ─── */
+      /* ── SUB PAGES ── */
       .sub-page {
-        position: fixed; inset: 0;
-        display: none;
-        flex-direction: column;
-        align-items: center;
-        justify-content: flex-start;
-        padding: 5vh 20px 24px;
-        background:
-          radial-gradient(ellipse at 50% 10%, rgba(100,10,10,0.3) 0%, transparent 60%),
-          linear-gradient(180deg, #0a0a07 0%, #111109 100%);
-        z-index: 200;
-        gap: 1.5rem;
-        animation: fadeIn 0.3s ease;
-        overflow-y: auto;
-        overflow-x: hidden;
+        position:fixed; inset:0; display:none; flex-direction:column;
+        align-items:center; justify-content:flex-start; padding-top:5vh;
+        background:radial-gradient(ellipse at 50% 10%,rgba(100,10,10,.3) 0%,transparent 60%),
+                   linear-gradient(180deg,#0a0a07,#111109);
+        z-index:200; gap:1.5rem; animation:fadeIn .3s ease;
       }
-
-      .sub-page.active { display: flex; }
-
-      @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(12px); }
-        to   { opacity: 1; transform: translateY(0); }
-      }
+      .sub-page.active { display:flex; }
+      @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
 
       .sub-title {
-        font-family: 'Creepster', cursive;
-        font-size: clamp(2rem, 6vw, 3.5rem);
-        color: var(--bone);
-        text-shadow: 0 0 20px var(--blood), 3px 3px 0 #000;
-        letter-spacing: 0.1em;
+        font-family:'Creepster',cursive; font-size:clamp(2rem,6vw,3.5rem);
+        color:var(--bone); text-shadow:0 0 20px var(--blood),3px 3px 0 #000; letter-spacing:.1em;
       }
+      .sub-divider { width:min(500px,80vw); height:2px; background:linear-gradient(90deg,transparent,var(--blood),transparent); }
 
-      .sub-divider {
-        width: min(500px, 80vw);
-        height: 2px;
-        background: linear-gradient(90deg, transparent, var(--blood), transparent);
-      }
-
-      /* ─── BACK BUTTON ─── */
       .back-btn {
-        position: absolute;
-        top: 20px; left: 20px;
-        background: none;
-        border: 1px solid rgba(192,57,43,0.4);
-        color: var(--bone);
-        font-family: 'Special Elite', serif;
-        font-size: 0.8rem;
-        letter-spacing: 0.2em;
-        padding: 0.5rem 1rem;
-        cursor: crosshair;
-        transition: all 0.2s;
-        text-transform: uppercase;
+        position:absolute; top:20px; left:20px;
+        background:none; border:1px solid rgba(192,57,43,.4);
+        color:var(--bone); font-family:'Special Elite',serif;
+        font-size:.8rem; letter-spacing:.2em; padding:.5rem 1rem;
+        cursor:crosshair; transition:all .2s; text-transform:uppercase;
       }
-      .back-btn:hover { border-color: var(--gore); color: var(--gore); }
-      .back-btn::before { content: '← '; }
+      .back-btn:hover { border-color:var(--gore); color:var(--gore); }
+      .back-btn::before { content:'← '; }
 
-      /* ─── CONTRÔLES ─── */
+      /* ── CONTRÔLES ── */
       .controls-grid {
-        display: grid;
-        grid-template-columns: auto 1fr;
-        gap: 0.8rem 1.5rem;
-        width: min(420px, 80vw);
-        background: var(--panel-bg);
-        border: 1px solid rgba(192,57,43,0.25);
-        padding: 2rem;
-        clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+        display:grid; grid-template-columns:auto 1fr; gap:.8rem 1.5rem;
+        width:min(420px,80vw); background:var(--panel);
+        border:1px solid rgba(192,57,43,.25); padding:2rem;
+        clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,14px 100%,0 calc(100% - 14px));
       }
-
       .key-badge {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 38px;
-        height: 38px;
-        padding: 0 8px;
-        background: linear-gradient(145deg, #2a2a22, #1a1a14);
-        border: 1px solid rgba(192,57,43,0.5);
-        border-bottom: 3px solid rgba(192,57,43,0.7);
-        color: var(--bone);
-        font-family: 'Special Elite', serif;
-        font-size: 0.9rem;
-        letter-spacing: 0.05em;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.6);
-        transition: transform 0.1s, box-shadow 0.1s;
+        display:inline-flex; align-items:center; justify-content:center;
+        min-width:38px; height:38px; padding:0 8px;
+        background:linear-gradient(145deg,#2a2a22,#1a1a14);
+        border:1px solid rgba(192,57,43,.5); border-bottom:3px solid rgba(192,57,43,.7);
+        color:var(--bone); font-family:'Special Elite',serif; font-size:.9rem;
+        box-shadow:0 2px 8px rgba(0,0,0,.6);
       }
-
-      .key-badge:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.8);
-        border-color: var(--gore);
-      }
-
       .control-action {
-        display: flex;
-        align-items: center;
-        color: rgba(240,230,200,0.75);
-        font-size: 0.95rem;
-        letter-spacing: 0.05em;
+        display:flex; align-items:center; color:rgba(240,230,200,.75); font-size:.95rem;
       }
+      .control-action::before { content:'//'; margin-right:.5rem; color:rgba(192,57,43,.5); font-size:.75rem; }
 
-      .control-action::before {
-        content: '//';
-        margin-right: 0.5rem;
-        color: rgba(192,57,43,0.5);
-        font-size: 0.75rem;
-      }
-
-      /* ─── CLASSEMENT ─── */
+      /* ── CLASSEMENT ── */
       .leaderboard {
-        width: min(480px, 85vw);
-        max-width: 100%;
-        background: var(--panel-bg);
-        border: 1px solid rgba(192,57,43,0.25);
-        padding: 1.5rem;
-        clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+        width:min(520px,88vw); background:var(--panel);
+        border:1px solid rgba(192,57,43,.25); padding:1.5rem;
+        clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,14px 100%,0 calc(100% - 14px));
+        max-height:65vh; overflow-y:auto;
       }
-
-      @media (max-height: 760px) {
-        .sub-page {
-          gap: 1rem;
-          padding-top: 72px;
-        }
-
-        .controls-grid,
-        .leaderboard {
-          width: min(420px, 88vw);
-          padding: 1.25rem;
-        }
-      }
-
       .lb-header {
-        display: grid;
-        grid-template-columns: 2rem 1fr 3rem 3rem;
-        gap: 0.5rem;
-        color: var(--blood);
-        font-size: 0.7rem;
-        letter-spacing: 0.2em;
-        text-transform: uppercase;
-        padding-bottom: 0.75rem;
-        border-bottom: 1px solid rgba(192,57,43,0.25);
-        margin-bottom: 0.5rem;
+        display:grid; grid-template-columns:2rem 1fr 3.5rem 3.5rem 4rem;
+        gap:.5rem; color:var(--blood); font-size:.7rem; letter-spacing:.2em;
+        text-transform:uppercase; padding-bottom:.75rem;
+        border-bottom:1px solid rgba(192,57,43,.25); margin-bottom:.5rem;
       }
-
       .lb-row {
-        display: grid;
-        grid-template-columns: 2rem 1fr 3rem 3rem;
-        gap: 0.5rem;
-        padding: 0.6rem 0;
-        border-bottom: 1px solid rgba(255,255,255,0.04);
-        color: rgba(240,230,200,0.7);
-        font-size: 0.9rem;
-        transition: background 0.2s;
+        display:grid; grid-template-columns:2rem 1fr 3.5rem 3.5rem 4rem;
+        gap:.5rem; padding:.55rem 0;
+        border-bottom:1px solid rgba(255,255,255,.04);
+        color:rgba(240,230,200,.7); font-size:.88rem; transition:background .2s;
       }
+      .lb-row:hover { background:rgba(192,57,43,.06); }
+      .lb-row.top-1 { color:#ffd700; }
+      .lb-row.top-2 { color:#c0c0c0; }
+      .lb-row.top-3 { color:#cd7f32; }
+      .lb-score { text-align:right; color:var(--green); font-size:.82rem; }
+      .lb-wave,.lb-kills { text-align:center; }
+      .lb-empty { text-align:center; color:rgba(240,230,200,.2); font-size:.85rem; padding:2rem; letter-spacing:.1em; }
+      .lb-loading { text-align:center; color:rgba(57,211,83,.5); font-size:.8rem; padding:1.5rem; animation:flicker 1s infinite; }
 
-      .lb-row:hover { background: rgba(192,57,43,0.06); }
-
-      .lb-row.top-1 { color: #ffd700; }
-      .lb-row.top-2 { color: #c0c0c0; }
-      .lb-row.top-3 { color: #cd7f32; }
-
-      .lb-rank { color: inherit; opacity: 0.6; }
-      .lb-name { font-size: 0.95rem; }
-      .lb-wave { text-align: center; }
-      .lb-score { text-align: right; color: var(--green-zombie); font-size: 0.85rem; }
-
-      .lb-empty {
-        text-align: center;
-        color: rgba(240,230,200,0.2);
-        font-size: 0.85rem;
-        padding: 2rem;
-        letter-spacing: 0.1em;
-      }
-
-      /* ─── GAME HUD (visible pendant le jeu) ─── */
-      #crosshair {
-        position: fixed;
-        top: 50%; left: 50%;
-        transform: translate(-50%, -50%);
-        color: white;
-        font-size: 24px;
-        pointer-events: none;
-        user-select: none;
-        display: none;
-      }
-
-      #hud {
-        position: absolute;
-        bottom: 20px; left: 20px;
-        width: 300px;
-        z-index: 10;
-        display: none;
-      }
-
-      #health-container {
-        width: 100%;
-        height: 20px;
-        background: rgba(0,0,0,0.5);
-        border: 2px solid #fff;
-      }
-
-      #health-bar-fill {
-        width: 100%;
-        height: 100%;
-        background: #ff0000;
-        transition: width 0.3s;
-      }
-
-      #ammo-display {
-        color: white;
-        font-family: sans-serif;
-        margin-top: 5px;
-        font-weight: bold;
-      }
-
-      #ui {
-        position: absolute;
-        bottom: 100px; left: 30px;
-        font-family: 'Courier New', Courier, monospace;
-        color: white;
-        display: none;
-      }
-
-      #wave-indicator {
-        position: fixed;
-        right: 20px; bottom: 20px;
-        color: rgba(255,255,255,0.8);
-        font-family: 'Courier New', Courier, monospace;
-        font-size: 12px;
-        text-shadow: 1px 1px 2px #000;
-        z-index: 10;
-        pointer-events: none;
-        display: none;
-      }
-
-      /* ─── QUIT CONFIRM ─── */
+      /* ── QUIT ── */
       #quit-confirm {
-        position: fixed; inset: 0;
-        background: rgba(0,0,0,0.85);
-        display: none;
-        align-items: center;
-        justify-content: center;
-        z-index: 500;
-        flex-direction: column;
-        gap: 1.5rem;
+        position:fixed; inset:0; background:rgba(0,0,0,.85);
+        display:none; align-items:center; justify-content:center;
+        z-index:500; flex-direction:column; gap:1.5rem;
       }
-
-      #quit-confirm.active { display: flex; }
-
+      #quit-confirm.active { display:flex; }
       .quit-box {
-        background: var(--panel-bg);
-        border: 1px solid rgba(192,57,43,0.5);
-        padding: 2.5rem 3rem;
-        text-align: center;
-        clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+        background:var(--panel); border:1px solid rgba(192,57,43,.5);
+        padding:2.5rem 3rem; text-align:center;
+        clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,14px 100%,0 calc(100% - 14px));
       }
-
-      .quit-box h2 {
-        font-family: 'Creepster', cursive;
-        color: var(--bone);
-        font-size: 2rem;
-        margin-bottom: 0.5rem;
-      }
-
-      .quit-box p {
-        color: rgba(240,230,200,0.5);
-        font-size: 0.9rem;
-        margin-bottom: 1.5rem;
-      }
-
-      .quit-actions {
-        display: flex;
-        gap: 1rem;
-        justify-content: center;
-      }
-
+      .quit-box h2 { font-family:'Creepster',cursive; color:var(--bone); font-size:2rem; margin-bottom:.5rem; }
+      .quit-box p { color:rgba(240,230,200,.5); font-size:.9rem; margin-bottom:1.5rem; }
+      .quit-actions { display:flex; gap:1rem; justify-content:center; }
       .quit-actions button {
-        padding: 0.6rem 1.5rem;
-        font-family: 'Special Elite', serif;
-        font-size: 0.9rem;
-        letter-spacing: 0.1em;
-        cursor: crosshair;
-        transition: all 0.2s;
+        padding:.6rem 1.5rem; font-family:'Special Elite',serif;
+        font-size:.9rem; letter-spacing:.1em; cursor:crosshair; transition:all .2s;
       }
+      #quit-yes { background:var(--blood); color:white; border:1px solid var(--gore); }
+      #quit-yes:hover { background:var(--gore); }
+      #quit-no { background:transparent; color:var(--bone); border:1px solid rgba(240,230,200,.3); }
+      #quit-no:hover { border-color:var(--bone); }
 
-      #quit-yes {
-        background: var(--blood);
-        color: white;
-        border: 1px solid var(--gore);
+      /* ── HUD ── */
+      #crosshair {
+        position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+        color:white; font-size:24px; pointer-events:none; user-select:none; display:none;
       }
-      #quit-yes:hover { background: var(--gore); }
-
-      #quit-no {
-        background: transparent;
-        color: var(--bone);
-        border: 1px solid rgba(240,230,200,0.3);
+      #hud { position:absolute; bottom:20px; left:20px; width:300px; z-index:10; display:none; }
+      #health-container { width:100%; height:20px; background:rgba(0,0,0,.5); border:2px solid #fff; }
+      #health-bar-fill { width:100%; height:100%; background:#ff0000; transition:width .3s; }
+      #ammo-display { color:white; font-family:sans-serif; margin-top:5px; font-weight:bold; }
+      #ui {
+        position:absolute; bottom:100px; left:30px;
+        font-family:'Courier New',Courier,monospace; color:white; display:none;
       }
-      #quit-no:hover { border-color: var(--bone); }
+      #wave-indicator {
+        position:fixed; right:20px; bottom:20px;
+        color:rgba(255,255,255,.8); font-family:'Courier New',Courier,monospace;
+        font-size:12px; text-shadow:1px 1px 2px #000; z-index:10;
+        pointer-events:none; display:none;
+      }
+      /* Sprint indicator */
+      #sprint-hint {
+        position:fixed; bottom:80px; left:50%; transform:translateX(-50%);
+        color:rgba(0,170,255,.7); font-family:'Courier New',monospace;
+        font-size:.7rem; letter-spacing:.15em; pointer-events:none;
+        display:none; text-shadow:0 0 8px #00aaff;
+      }
     </style>
   </head>
   <body>
 
-    <!-- ════════════════════════════════════════════
-         MAIN MENU
-    ════════════════════════════════════════════ -->
+    <!-- ── MAIN MENU ── -->
     <div id="main-menu">
       <h1 class="menu-title">DEAD ZONE</h1>
       <p class="menu-subtitle">Survie &bull; Horreur &bull; Action</p>
 
-      <div class="menu-name-box">
-        <input
-          id="player-name"
-          class="menu-name-input"
-          type="text"
-          maxlength="30"
-          placeholder="Entre ton nom"
-          autocomplete="off"
-        />
-        <p id="player-name-error" class="menu-name-error"></p>
+      <div class="name-row">
+        <input class="name-input" id="player-name-input" type="text"
+               placeholder="Ton pseudo..." maxlength="20" autocomplete="off" />
       </div>
+      <div id="player-name-error"></div>
 
       <div class="menu-buttons">
-        <button class="menu-btn play" id="btn-play">
-          <span>▶ &nbsp; Jouer</span>
-        </button>
-        <button class="menu-btn" id="btn-controls">
-          <span>⌨ &nbsp; Contrôles</span>
-        </button>
-        <button class="menu-btn" id="btn-leaderboard">
-          <span>☠ &nbsp; Classement</span>
-        </button>
-        <button class="menu-btn quit" id="btn-quit">
-          <span>✕ &nbsp; Quitter</span>
-        </button>
+        <button class="menu-btn play" id="btn-play"><span>▶ &nbsp; Jouer</span></button>
+        <button class="menu-btn" id="btn-controls"><span>⌨ &nbsp; Contrôles</span></button>
+        <button class="menu-btn" id="btn-leaderboard"><span>☠ &nbsp; Classement</span></button>
+        <button class="menu-btn quit" id="btn-quit"><span>✕ &nbsp; Quitter</span></button>
       </div>
-
-      <p class="menu-footer">HACKATHON 2026 &nbsp;•&nbsp; BUILD 0.1</p>
+      <p class="menu-footer">HACKATHON 2026 &nbsp;•&nbsp; BUILD 0.2</p>
     </div>
 
-    <!-- ════════════════════════════════════════════
-         CONTRÔLES
-    ════════════════════════════════════════════ -->
+    <!-- ── CONTRÔLES ── -->
     <div class="sub-page" id="page-controls">
       <button class="back-btn" data-back>Retour</button>
       <h2 class="sub-title">Contrôles</h2>
       <div class="sub-divider"></div>
-
       <div class="controls-grid">
-        <span class="key-badge">Z</span>
-        <span class="control-action">Avancer</span>
-
-        <span class="key-badge">S</span>
-        <span class="control-action">Reculer</span>
-
-        <span class="key-badge">Q</span>
-        <span class="control-action">Aller à gauche</span>
-
-        <span class="key-badge">D</span>
-        <span class="control-action">Aller à droite</span>
-
-        <span class="key-badge">R</span>
-        <span class="control-action">Recharger l'arme</span>
-
-        <span class="key-badge" style="font-size:0.7rem; min-width:56px">🖱 Clic</span>
+        <span class="key-badge">Z</span><span class="control-action">Avancer</span>
+        <span class="key-badge">S</span><span class="control-action">Reculer</span>
+        <span class="key-badge">Q</span><span class="control-action">Aller à gauche</span>
+        <span class="key-badge">D</span><span class="control-action">Aller à droite</span>
+        <span class="key-badge">Shift</span><span class="control-action">Sprint (endurance limitée)</span>
+        <span class="key-badge">R</span><span class="control-action">Recharger l'arme</span>
+        <span class="key-badge" style="font-size:.7rem;min-width:56px">🖱 Clic</span>
         <span class="control-action">Tirer</span>
-
-        <span class="key-badge">Échap</span>
-        <span class="control-action">Pause / Menu</span>
+        <span class="key-badge">Échap</span><span class="control-action">Pause / Menu</span>
       </div>
     </div>
 
-    <!-- ════════════════════════════════════════════
-         CLASSEMENT
-    ════════════════════════════════════════════ -->
+    <!-- ── CLASSEMENT ── -->
     <div class="sub-page" id="page-leaderboard">
       <button class="back-btn" data-back>Retour</button>
       <h2 class="sub-title">Classement</h2>
       <div class="sub-divider"></div>
-
       <div class="leaderboard">
         <div class="lb-header">
-          <span>#</span>
-          <span>Joueur</span>
-          <span style="text-align:center">Vague</span>
-          <span style="text-align:right">Kills</span>
+          <span>#</span><span>Joueur</span>
+          <span class="lb-wave">Vague</span>
+          <span class="lb-kills">Kills</span>
+          <span class="lb-score">Score</span>
         </div>
-        <div id="lb-body">
-          <div class="lb-empty">— Aucune partie enregistrée —</div>
-        </div>
+        <div id="lb-body"><div class="lb-loading">Chargement...</div></div>
       </div>
     </div>
 
-    <!-- ════════════════════════════════════════════
-         QUIT CONFIRM
-    ════════════════════════════════════════════ -->
+    <!-- ── QUIT ── -->
     <div id="quit-confirm">
       <div class="quit-box">
         <h2>Quitter ?</h2>
@@ -615,151 +282,116 @@
       </div>
     </div>
 
-    <!-- ════════════════════════════════════════════
-         GAME HUD
-    ════════════════════════════════════════════ -->
+    <!-- ── HUD ── -->
     <div id="crosshair">+</div>
-
     <div id="hud">
-      <div id="health-container">
-        <div id="health-bar-fill"></div>
-      </div>
+      <div id="health-container"><div id="health-bar-fill"></div></div>
       <div id="ammo-display"></div>
     </div>
-
     <div id="ui">
-      <div style="font-size:24px; text-shadow:2px 2px #000">
+      <div style="font-size:24px;text-shadow:2px 2px #000">
         AMMO: <span id="ammo-current">12</span> /
       </div>
       <span id="ammo-total">10000</span>
     </div>
-
     <div id="wave-indicator">VAGUE 1</div>
+    <div id="sprint-hint">⇧ SHIFT — SPRINT</div>
 
-    <!-- ════════════════════════════════════════════
-         MENU LOGIC
-    ════════════════════════════════════════════ -->
     <script>
-      // ── Leaderboard (backend) ───────────────────
+      // ── Classement depuis l'API ───────────────────────────
       async function loadLeaderboard() {
         const body = document.getElementById('lb-body');
-
-        body.innerHTML = '<div class="lb-empty">Chargement...</div>';
-
-        let scores = [];
+        body.innerHTML = '<div class="lb-loading">Chargement...</div>';
         try {
-          const response = await fetch('http://localhost:3000/scores/top?limit=10');
-          if (!response.ok) throw new Error('Leaderboard unavailable');
-          scores = await response.json();
-        } catch (error) {
-          body.innerHTML = '<div class="lb-empty">— Backend indisponible —</div>';
-          return;
-        }
+          const res = await fetch('http://localhost:3000/scores/top?limit=15', {
+            signal: AbortSignal.timeout(3000)
+          });
+          if (!res.ok) throw new Error();
+          const scores = await res.json();
 
-        if (!scores.length) {
-          body.innerHTML = '<div class="lb-empty">— Aucune partie enregistrée —</div>';
-          return;
-        }
+          if (!scores.length) {
+            body.innerHTML = '<div class="lb-empty">— Aucune partie enregistrée —</div>';
+            return;
+          }
 
-        const topClass = ['top-1','top-2','top-3'];
-        body.innerHTML = scores
-          .sort((a,b) => b.score - a.score)
-          .slice(0, 10)
-          .map((s, i) => `
-            <div class="lb-row ${topClass[i] || ''}">
-              <span class="lb-rank">${i+1}</span>
-              <span class="lb-name">${s.pseudo || 'Anonyme'}</span>
-              <span class="lb-wave">${s.wave || 1}</span>
-              <span class="lb-score">${(s.zombiesKilled || 0).toLocaleString()}</span>
-            </div>`)
-          .join('');
+          const topClass = ['top-1','top-2','top-3'];
+          body.innerHTML = scores.map((s, i) => `
+            <div class="lb-row ${topClass[i]||''}">
+              <span style="opacity:.6">${i+1}</span>
+              <span>${s.pseudo || 'Anonyme'}</span>
+              <span class="lb-wave">${s.wave ?? '—'}</span>
+              <span class="lb-kills">${s.zombiesKilled ?? '—'}</span>
+              <span class="lb-score">${(s.score||0).toLocaleString()}</span>
+            </div>`).join('');
+        } catch {
+          body.innerHTML = '<div class="lb-empty">⚠ Backend hors ligne</div>';
+        }
       }
 
-      // ── Navigation ───────────────────────────────
-      const mainMenu   = document.getElementById('main-menu');
-      const pageCtrl   = document.getElementById('page-controls');
-      const pageLb     = document.getElementById('page-leaderboard');
-      const quitBox    = document.getElementById('quit-confirm');
+      // ── Navigation ────────────────────────────────────────
+      const mainMenu = document.getElementById('main-menu');
+      const pageCtrl = document.getElementById('page-controls');
+      const pageLb   = document.getElementById('page-leaderboard');
+      const quitBox  = document.getElementById('quit-confirm');
 
       function showPage(page) {
         [pageCtrl, pageLb].forEach(p => p.classList.remove('active'));
         mainMenu.style.display = 'none';
         page.classList.add('active');
       }
-
       function backToMenu() {
         [pageCtrl, pageLb].forEach(p => p.classList.remove('active'));
         mainMenu.style.display = 'flex';
       }
 
       document.getElementById('btn-controls').addEventListener('click', () => showPage(pageCtrl));
-
-      document.getElementById('btn-leaderboard').addEventListener('click', async () => {
-        await loadLeaderboard();
+      document.getElementById('btn-leaderboard').addEventListener('click', () => {
+        loadLeaderboard();
         showPage(pageLb);
       });
+      document.querySelectorAll('[data-back]').forEach(btn => btn.addEventListener('click', backToMenu));
 
-      document.querySelectorAll('[data-back]').forEach(btn =>
-        btn.addEventListener('click', backToMenu)
-      );
-
-      // ── Quit ────────────────────────────────────
-      document.getElementById('btn-quit').addEventListener('click', () => {
-        quitBox.classList.add('active');
-      });
-      document.getElementById('quit-no').addEventListener('click', () => {
-        quitBox.classList.remove('active');
-      });
+      // ── Quit ──────────────────────────────────────────────
+      document.getElementById('btn-quit').addEventListener('click', () => quitBox.classList.add('active'));
+      document.getElementById('quit-no').addEventListener('click', () => quitBox.classList.remove('active'));
       document.getElementById('quit-yes').addEventListener('click', () => {
-        window.close(); // works in Electron/packaged; browsers may ignore
         document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#444;font-family:monospace">Fermez cet onglet pour quitter.</div>';
       });
 
-      // ── Play ─────────────────────────────────────
+      // ── Play ──────────────────────────────────────────────
       document.getElementById('btn-play').addEventListener('click', startGame);
-      document.getElementById('player-name').addEventListener('keydown', e => {
+      document.getElementById('player-name-input').addEventListener('keydown', e => {
         if (e.key === 'Enter') startGame();
       });
 
       function startGame() {
-        const nameInput = document.getElementById('player-name');
-        const errorBox = document.getElementById('player-name-error');
-        const playerName = nameInput.value.trim();
-
-        if (!playerName) {
-          errorBox.textContent = 'Entre un nom avant de lancer la partie.';
-          nameInput.focus();
+        const name = document.getElementById('player-name-input').value.trim();
+        const err  = document.getElementById('player-name-error');
+        if (!name) {
+          err.textContent = 'Entre ton pseudo pour jouer !';
+          document.getElementById('player-name-input').focus();
           return;
         }
-
-        errorBox.textContent = '';
+        err.textContent = '';
         mainMenu.style.display = 'none';
-        // Show HUD elements
-        document.getElementById('crosshair').style.display = 'block';
-        document.getElementById('hud').style.display = 'block';
-        document.getElementById('ui').style.display = 'block';
-        document.getElementById('wave-indicator').style.display = 'block';
-
-        // Request pointer lock so your game can capture the mouse
+        ['crosshair','hud','ui','wave-indicator','sprint-hint'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.style.display = id === 'sprint-hint' ? 'block' : 'block';
+        });
         document.body.requestPointerLock?.();
-
-        // Dispatch a custom event so main.js knows to start
-        window.dispatchEvent(new CustomEvent('game:start', {
-          detail: { playerName }
-        }));
+        window.dispatchEvent(new CustomEvent('game:start', { detail: { playerName: name } }));
       }
 
-      // ── Keyboard shortcut: Échap to toggle menu ──
+      // ── Échap = pause/menu ────────────────────────────────
       document.addEventListener('keydown', e => {
         if (e.key !== 'Escape') return;
-        const gameRunning = document.getElementById('crosshair').style.display === 'block';
-        if (gameRunning) {
-          // Pause & show menu again (your game logic can listen for game:pause)
+        const inGame = document.getElementById('crosshair').style.display === 'block';
+        if (inGame) {
           document.exitPointerLock?.();
-          document.getElementById('crosshair').style.display = 'none';
-          document.getElementById('hud').style.display = 'none';
-          document.getElementById('ui').style.display = 'none';
-          document.getElementById('wave-indicator').style.display = 'none';
+          ['crosshair','hud','ui','wave-indicator','sprint-hint'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+          });
           mainMenu.style.display = 'flex';
           window.dispatchEvent(new Event('game:pause'));
         }

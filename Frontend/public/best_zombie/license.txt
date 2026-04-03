@@ -1,0 +1,11 @@
+Model Information:
+* title:	fat zombie idle (animated)
+* source:	https://sketchfab.com/3d-models/fat-zombie-idle-animated-ab45b1f5bf0947fa8a3f2d349f47e0ba
+* author:	vicente betoret ferrero (https://sketchfab.com/deathcow)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "fat zombie idle (animated)" (https://sketchfab.com/3d-models/fat-zombie-idle-animated-ab45b1f5bf0947fa8a3f2d349f47e0ba) by vicente betoret ferrero (https://sketchfab.com/deathcow) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
